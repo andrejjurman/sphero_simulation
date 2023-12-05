@@ -100,12 +100,11 @@ class ReynoldsController:
 
         
     def limit_vel(self, vel : Twist()):
-        for i in range(self.num_of_robots):
-            norm = (vel[i].linear.x **2 + vel[i].linear.y ** 2) ** 0.5
-            if norm >= self.vel_max:
-                vel[i].linear.x = vel[i].linear.x / norm * self.vel_max
-                vel[i].linear.y = vel[i].linear.y / norm * self.vel_max
-        return vel
+        norm = (vel.linear.x **2 + vel.linear.y ** 2) ** 0.5
+        if norm >= self.vel_max:
+            vel.linear.x = vel.linear.x / norm * self.vel_max
+            vel.linear.y = vel.linear.y / norm * self.vel_max
+    return vel
 
     def run(self):
         while not rospy.is_shutdown():
@@ -123,9 +122,9 @@ class ReynoldsController:
                 vel[i].linear.x = (vel_coh[i].linear.x - vel_sep[i].linear.x + vel_alig[i].linear.x + vel_nav[i].linear.x - vel_avoid[i].linear.x)
                 vel[i].linear.y = (vel_coh[i].linear.y - vel_sep[i].linear.y + vel_alig[i].linear.y + vel_nav[i].linear.y - vel_avoid[i].linear.y)
                 
-                vel_limited = self.limit_vel(vel)
+                vel_limited = self.limit_vel(vel[i])
 
-                self.robot_publishers[f'pub_{i}'].publish(vel_limited[i])
+                self.robot_publishers[f'pub_{i}'].publish(vel_limited)
 
 
 if __name__ == '__main__':
