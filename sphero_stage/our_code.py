@@ -107,11 +107,17 @@ class ReynoldsController:
     return vel
 
     def run(self):
+        for i in range(self.num_of_robots):
+            vel_initial = Twist()
+            vel_initial.linear.x = np.random.rand() / 2
+            vel_initial.linear.y = np.random.rand() / 2
+            vel_limited = self.limit_vel(vel_initial)
+            self.robot_publishers[f'pub_{i}'].publish(vel_limited)
+            
         while not rospy.is_shutdown():
 
             vel = [Twist()] * self.num_of_robots
 
-            
             vel_coh = self.RulesLib.cohesion(self.positions_subscribed)
             vel_sep = self.RulesLib.separation(self.positions_subscribed)
             vel_alig = self.RulesLib.alignment(self.positions_subscribed, self.rotations_subscribed, self.velocities_subscribed)
@@ -119,8 +125,8 @@ class ReynoldsController:
             vel_avoid = self.RulesLib.avoidance(self.positions_subscribed, self.occupancy_grid_coordinates)
             
             for i in range(self.num_of_robots):
-                vel[i].linear.x = (vel_coh[i].linear.x - vel_sep[i].linear.x + vel_alig[i].linear.x + vel_nav[i].linear.x - vel_avoid[i].linear.x)
-                vel[i].linear.y = (vel_coh[i].linear.y - vel_sep[i].linear.y + vel_alig[i].linear.y + vel_nav[i].linear.y - vel_avoid[i].linear.y)
+                vel[i].linear.x += (vel_coh[i].linear.x - vel_sep[i].linear.x + vel_alig[i].linear.x + vel_nav[i].linear.x - vel_avoid[i].linear.x)
+                vel[i].linear.y += (vel_coh[i].linear.y - vel_sep[i].linear.y + vel_alig[i].linear.y + vel_nav[i].linear.y - vel_avoid[i].linear.y)
                 
                 vel_limited = self.limit_vel(vel[i])
 
@@ -128,7 +134,6 @@ class ReynoldsController:
 
 
 if __name__ == '__main__':
-    
     try:
         rospy.init_node('ReynoldsController', anonymous=False)
         #rate = rospy.Rate(10)
